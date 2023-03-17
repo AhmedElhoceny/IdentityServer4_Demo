@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using DataAccess.Contexts;
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Identity;
+using IdentityServer4_Demo.Contexts;
 
 var builder = WebApplication.CreateBuilder(args);
 ConfigurationManager configuration = builder.Configuration;
@@ -8,7 +10,15 @@ ConfigurationManager configuration = builder.Configuration;
 
 var assembly = typeof(Program).Assembly.GetName().Name;
 
+builder.Services.AddDbContext<AspNetIdentityContext>(option => {
+    option.UseSqlServer(configuration.GetConnectionString("IdentityStorageConnection"), opt => opt.MigrationsAssembly(assembly));
+});
+
+builder.Services.AddIdentity<IdentityUser , IdentityRole>()
+    .AddEntityFrameworkStores<AspNetIdentityContext>();
+
 builder.Services.AddIdentityServer()
+    .AddAspNetIdentity<IdentityUser>()
     .AddConfigurationStore(option =>
     {
         option.ConfigureDbContext = b => b.UseSqlServer(configuration.GetConnectionString("OperationStorageConnection"),opt => opt.MigrationsAssembly(assembly));
